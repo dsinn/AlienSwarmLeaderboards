@@ -1,0 +1,6 @@
+<table>
+<tr>
+	<th colspan="2">Name</th>
+	<th>Time</th>
+	<th>Difficulty</th>
+</tr>

@@ -1,0 +1,7 @@
+asi-jac1-landingbay_01 = Landing Bay
+asi-jac1-landingbay_02 = Cargo Elevator
+asi-jac2-deima = Deima
+asi-jac3-rydberg = Rydberg Reactor
+asi-jac4-residential = SynTek Residential
+asi-jac6-sewerjunction = Sewer Junction
+asi-jac7-timorstation = Timor Station

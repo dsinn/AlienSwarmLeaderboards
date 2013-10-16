@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"> 
+<style type="text/css">
+body {
+	background-color: black;
+	color: white;
+	font-family: Arial;
+}
+table {
+	border-collapse: collapse;
+}
+th, td {
+	border: solid 1px white;
+	padding: 0.2em 0.5em 0.2em 0.5em;
+}
+caption {
+	font-size: x-large;
+	font-weight: bold;
+}
+a {
+	color: skyblue;
+	text-decoration: none;
+}
+a:hover {
+	text-decoration: underline;
+}
+.avatar {
+	border-right: none;
+}
+.name {
+	border-left: none;
+	padding-left: 0;
+}
+.you {
+	color: chartreuse;
+}
+.time {
+	text-align: right;
+}
+.difficulty {
+	text-align: center;
+}
+</style>
+</head>
+<body>
