@@ -1,6 +1,8 @@
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
@@ -21,10 +23,8 @@ public class Main extends DefaultHandler {
 
 	final public static String site = "http://steamcommunity.com/";
 	final public static String appendix = "?xml=1";
-	final public static String[] maps = { "asi-jac1-landingbay_01",
-			"asi-jac1-landingbay_02", "asi-jac2-deima", "asi-jac3-rydberg",
-			"asi-jac4-residential", "asi-jac6-sewerjunction",
-			"asi-jac7-timorstation" };
+	final public static String[] maps = { "asi-jac1-landingbay_01", "asi-jac1-landingbay_02", "asi-jac2-deima",
+			"asi-jac3-rydberg", "asi-jac4-residential", "asi-jac6-sewerjunction", "asi-jac7-timorstation" };
 	final public static Properties mapNames = getMapNames();
 	final public static String fieldEnd = ".time.best.";
 
@@ -35,20 +35,18 @@ public class Main extends DefaultHandler {
 	private boolean useNextValue = false, atExperience = false;
 	private List<TimeEntry>[] times;
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 		final Scanner sn = new Scanner(System.in);
-		System.out
-				.println("To select a friends list, enter \"1\" (without quotes).");
-		System.out
-				.println("To select a Steam group members list, enter anything else.");
+		System.out.println("To select a friends list, enter \"1\" (without quotes).");
+		System.out.println("To select a Steam group members list, enter anything else.");
 		System.out.print("Input: ");
 		final String mode = sn.nextLine().trim();
 
 		System.out.println();
 		System.out.print("Enter Steam ID: ");
 		final String input = sn.nextLine().trim();
-		final List<TimeEntry>[] times = new Main().getLeaders(input,
-				mode.equals("1"));
+		sn.close();
+		final List<TimeEntry>[] times = new Main().getLeaders(input, mode.equals("1"));
 
 		if (times == null) {
 			return;
@@ -59,7 +57,7 @@ public class Main extends DefaultHandler {
 	}
 
 	/**
-	 * 
+	 *
 	 * @param id
 	 * @param friendsMode
 	 *            True if
@@ -131,26 +129,20 @@ public class Main extends DefaultHandler {
 			curField = maps[iMap] + fieldEnd;
 			useNextValue = false;
 		} else {
-			throw new SAXException("Collected times from "
-					+ curProfile.getName());
+			throw new SAXException("Collected times from " + curProfile.getName());
 		}
 	}
 
-	public void characters(char[] ch, int start, int length)
-			throws SAXException {
+	public void characters(char[] ch, int start, int length) throws SAXException {
 		saxTemp = new String(ch, start, length);
 	}
 
-	public void endElement(String uri, String localName, String qName)
-			throws SAXException {
+	public void endElement(String uri, String localName, String qName) throws SAXException {
 		if (qName.equalsIgnoreCase("APIName")) {
 			if (saxTemp.startsWith(curField)) {
 				final String difficulty = saxTemp.substring(curField.length());
-				if (difficulty.equalsIgnoreCase("normal")
-						|| difficulty.equalsIgnoreCase("hard")
-						|| difficulty.equalsIgnoreCase("insane")) {
-					// "difficulty" and "easy" do not count towards
-					// achievements
+				if (difficulty.matches("(?i-)normal|hard|insane")) {
+					// "difficulty" and "easy" do not count towards achievements
 					curDiff = difficulty;
 					useNextValue = true;
 				}
@@ -171,16 +163,14 @@ public class Main extends DefaultHandler {
 				if (curDiff.equalsIgnoreCase("insane")) {
 					// Insane is the last difficulty
 					if (bestTime != Integer.MAX_VALUE) {
-						times[iMap].add(new TimeEntry(curProfile, bestTime,
-								fastestDiff));
+						times[iMap].add(new TimeEntry(curProfile, bestTime, fastestDiff));
 					}
 					changeMap(false);
 				}
 			} else if (atExperience) {
 				atExperience = false;
 				if (saxTemp.equals("0")) {
-					throw new SAXException(curProfile.id
-							+ " has never completed a level");
+					throw new SAXException(curProfile.id + " has never completed a level");
 				}
 			}
 		}
@@ -195,96 +185,86 @@ public class Main extends DefaultHandler {
 			System.out.printf("%n== %s ==%n", mapName);
 			Collections.sort(times[i], new TimeEntryComparator());
 			for (final TimeEntry te : times[i]) {
-				System.out.printf("%-32s - %5s (%s)", te.p.getName(), te.time,
-						te.difficulty);
+				System.out.printf("%-32s - %5s (%s)", te.p.getName(), te.time, te.difficulty);
 				if (myId.equals(te.p.id)) {
 					System.out.print(" *");
 				}
 				System.out.println();
 			}
 		}
-		System.out.printf("%nData collected on %tc.",
-				System.currentTimeMillis());
+		System.out.printf("%nData collected on %tc.", System.currentTimeMillis());
 	}
 
-	public static void outputHtml(String path, List<TimeEntry>[] times,
-			String myId) {
-		try {
-			final File file = new File(path);
-			final FileOutputStream fso = new FileOutputStream(file);
-			final OutputStreamWriter osw = new OutputStreamWriter(fso, "UTF8");
-			final BufferedWriter bw = new BufferedWriter(osw);
+	public static void outputHtml(String path, List<TimeEntry>[] times, String myId) throws IOException {
+		final File file = new File(path);
+		final FileOutputStream fso = new FileOutputStream(file);
+		final OutputStreamWriter osw = new OutputStreamWriter(fso, "UTF8");
+		final BufferedWriter bw = new BufferedWriter(osw);
 
-			bw.write(copypaste("start.txt"));
-			for (int i = 0; i < maps.length; i++) {
-				String mapName = mapNames.getProperty(maps[i]);
-				if (mapName == null) {
-					mapName = maps[i];
-				}
-				bw.write("<h2>" + mapName + "</h2>");
-				bw.newLine();
-				bw.write(copypaste("tableStart.txt"));
-				Collections.sort(times[i], new TimeEntryComparator());
-				for (final TimeEntry te : times[i]) {
-					bw.write("<tr>");
-					bw.newLine();
-					bw.write(String.format(
-							"\t<td class=\"avatar\"><img src=\"%s\" /></td>",
-							te.p.getImgsrc()));
-					bw.write("\t<td class=\"name\">");
-					final String profileUrl = Main.site + te.p.folder + te.p.id;
-					String profileClass;
-					if (myId.equals(te.p.id)) {
-						profileClass = " class=\"you\"";
-					} else {
-						profileClass = "";
-					}
-					bw.write(String.format("<a%s href=\"%s\">%s</a>",
-							profileClass, profileUrl, te.p.getName()));
-
-					bw.write(String
-							.format(" (<a href=\"%s\">stats</a>)",
-									profileUrl
-											+ "/stats/AlienSwarm?tab=stats&subtab=missions"));
-					bw.write("</td>");
-					bw.newLine();
-					bw.write("<td class=\"time\">" + te.time + "</td>");
-					bw.newLine();
-					bw.write("<td class=\"difficulty\">"
-							+ Character.toUpperCase(te.difficulty.charAt(0))
-							+ te.difficulty.substring(1) + "</td>");
-					bw.newLine();
-					bw.write("</tr>");
-					bw.newLine();
-				}
-				bw.write("</table>");
-				bw.newLine();
+		bw.write(copypaste("start.txt"));
+		for (int i = 0; i < maps.length; i++) {
+			String mapName = mapNames.getProperty(maps[i]);
+			if (mapName == null) {
+				mapName = maps[i];
 			}
-			bw.write(String.format("<br />Tables generated on %tc.",
-					System.currentTimeMillis()));
-			bw.write(copypaste("end.txt"));
-			bw.close();
-			java.awt.Desktop.getDesktop().browse(file.toURI());
-		} catch (IOException ioe) {
-			ioe.printStackTrace();
+			bw.write("<h2>" + mapName + "</h2>");
+			bw.write(copypaste("tableStart.txt"));
+			Collections.sort(times[i], new TimeEntryComparator());
+			for (final TimeEntry te : times[i]) {
+				bw.write("<tr>");
+				bw.write(String.format("\t<td class=\"avatar\"><img src=\"%s\" /></td>", te.p.getImgsrc()));
+				bw.write("\t<td class=\"name\">");
+				final String profileUrl = Main.site + te.p.folder + te.p.id;
+				String profileClass;
+				if (myId.equals(te.p.id)) {
+					profileClass = " class=\"you\"";
+				} else {
+					profileClass = "";
+				}
+				bw.write(String.format("<a%s href=\"%s\">%s</a>", profileClass, profileUrl, te.p.getName()));
+
+				bw.write(String.format(" (<a href=\"%s\">stats</a>)", profileUrl
+						+ "/stats/AlienSwarm?tab=stats&subtab=missions"));
+				bw.write("</td>");
+				bw.write("<td class=\"time\">" + te.time + "</td>");
+				bw.write("<td class=\"difficulty\">" + Character.toUpperCase(te.difficulty.charAt(0))
+						+ te.difficulty.substring(1) + "</td>");
+				bw.write("</tr>");
+			}
+			bw.write("</table>");
 		}
+		bw.write(String.format("<br />Tables generated on %tc.", System.currentTimeMillis()));
+		bw.write(copypaste("end.txt"));
+		bw.close();
+		java.awt.Desktop.getDesktop().browse(file.toURI());
 	}
 
 	/**
 	 * Returns all of the text in a file.
-	 * 
+	 *
 	 * @param path
 	 *            the path of the file
 	 * @return all of the text in a file
 	 */
 	protected static String copypaste(String path) {
-		String output = "";
-		final Scanner sn = new Scanner(ClassLoader.getSystemClassLoader()
-				.getResourceAsStream(path));
-		while (sn.hasNextLine()) {
-			output += String.format("%s%n", sn.nextLine());
+		final StringBuffer sb = new StringBuffer();
+
+		Scanner sn;
+		try {
+			sn = new Scanner(ClassLoader.getSystemClassLoader().getResourceAsStream(path));
+		} catch (NullPointerException e) {
+			try {
+				sn = new Scanner(new File(path));
+			} catch (FileNotFoundException e2) {
+				return "";
+			}
 		}
-		return output;
+
+		while (sn.hasNextLine()) {
+			sb.append(String.format("%s%n", sn.nextLine()));
+		}
+		sn.close();
+		return sb.toString();
 	}
 
 	/**
@@ -292,12 +272,17 @@ public class Main extends DefaultHandler {
 	 */
 	private static Properties getMapNames() {
 		final Properties ppt = new Properties();
+
 		try {
-			ppt.load(ClassLoader.getSystemClassLoader().getResourceAsStream(
-					"mapNames.txt"));
-		} catch (Exception e) {
-			e.printStackTrace();
+			ppt.load(ClassLoader.getSystemClassLoader().getResourceAsStream("mapNames.txt"));
+		} catch (IOException e) {
+		} catch (NullPointerException e) {
 		}
+		try {
+			ppt.load(new FileReader("mapNames.txt"));
+		} catch (IOException e) {
+		}
+
 		return ppt;
 	}
 }
