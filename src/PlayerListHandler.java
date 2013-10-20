@@ -21,8 +21,7 @@ public class PlayerListHandler extends DefaultHandler {
 			final SAXParserFactory factory = SAXParserFactory.newInstance();
 			final SAXParser sp = factory.newSAXParser();
 
-			sp.parse(Main.site + p.folder + p.id + "/friends" + Main.appendix,
-					this);
+			sp.parse(Main.site + p.folder + p.id + "/friends" + Main.appendix, this);
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
 		} catch (ParserConfigurationException pce) {
@@ -59,19 +58,18 @@ public class PlayerListHandler extends DefaultHandler {
 		return players;
 	}
 
-	public void characters(char[] ch, int start, int length)
-			throws SAXException {
+	@Override
+	public void characters(char[] ch, int start, int length) throws SAXException {
 		saxTemp = new String(ch, start, length);
 	}
 
-	public void endElement(String uri, String localName, String qName)
-			throws SAXException {
+	@Override
+	public void endElement(String uri, String localName, String qName) throws SAXException {
 		if (qName.equalsIgnoreCase(tag)) {
 			players.add(new Profile(saxTemp));
 		} else if (qName.equalsIgnoreCase("error")) {
 			players = null;
-			throw new SAXException(
-					"Profile is non-existent, private, or friends-only.");
+			throw new SAXException("Profile is non-existent, private, or friends-only.");
 		}
 	}
 }

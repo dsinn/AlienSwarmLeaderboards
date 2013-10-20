@@ -57,7 +57,7 @@ public class Main extends DefaultHandler {
 	}
 
 	/**
-	 *
+	 * 
 	 * @param id
 	 * @param friendsMode
 	 *            True if
@@ -133,10 +133,12 @@ public class Main extends DefaultHandler {
 		}
 	}
 
+	@Override
 	public void characters(char[] ch, int start, int length) throws SAXException {
 		saxTemp = new String(ch, start, length);
 	}
 
+	@Override
 	public void endElement(String uri, String localName, String qName) throws SAXException {
 		if (qName.equalsIgnoreCase("APIName")) {
 			if (saxTemp.startsWith(curField)) {
@@ -241,7 +243,7 @@ public class Main extends DefaultHandler {
 
 	/**
 	 * Returns all of the text in a file.
-	 *
+	 * 
 	 * @param path
 	 *            the path of the file
 	 * @return all of the text in a file

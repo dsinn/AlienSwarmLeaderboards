@@ -7,7 +7,7 @@ public class TimeEntry {
 		this.p = p;
 		this.seconds = seconds;
 		this.difficulty = difficulty;
-		
+
 		int minutes = seconds / 60;
 		time = String.format("%d:%02d", minutes, seconds % 60);
 	}
